@@ -33,7 +33,7 @@ public class FoodTruckApplication extends Application<FoodTruckConfiguration> {
     bootstrap.setConfigurationSourceProvider(new ResourceConfigurationSourceProvider());
   }
 
-  private void initSwagger(Bootstrap<FoodTruckConfiguration> bootstrap){
+  private void initSwagger(Bootstrap<FoodTruckConfiguration> bootstrap) {
     bootstrap.addBundle(new SwaggerBundle<FoodTruckConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(FoodTruckConfiguration configuration) {

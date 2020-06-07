@@ -20,6 +20,15 @@ public class FoodTruck {
   @ApiModelProperty(value = "Distance away from supplied lat/lon")
   private final double distanceInMiles;
 
+  /**
+   * POJO representing a Food Truck.
+   * @param name String name of the food truck
+   * @param type {@link TruckType} type of the truck
+   * @param locationDescription String description of the location of the truck
+   * @param address String address of the truck
+   * @param foodItems String sample of the things the truck offers
+   * @param distanceInMiles Double distance away from input lat/lon in miles
+   */
   @JsonCreator
   public FoodTruck(@JsonProperty("name") String name,
                    @JsonProperty("type") TruckType type,
