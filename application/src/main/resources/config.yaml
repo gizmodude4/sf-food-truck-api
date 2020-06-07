@@ -1,0 +1,3 @@
+dataSFHost: https://data.sfgov.org/
+swagger:
+  resourcePackage: com.colbysites.sffoodtruckapi.resources

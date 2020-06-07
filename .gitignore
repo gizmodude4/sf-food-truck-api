@@ -1,0 +1,14 @@
+# IntelliJ Files
+.idea/
+
+# Build outputs
+target/
+*.ipr
+*.iws
+*.iml
+
+# Mac hidden files
+.DS_Store
+
+# Maven build artifacts
+dependency-reduced-pom.xml
