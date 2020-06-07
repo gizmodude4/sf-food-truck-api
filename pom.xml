@@ -26,7 +26,7 @@
     <jackson.version>2.10.2</jackson.version>
     <junit.version>4.12</junit.version>
     <mockito.version>3.0.0</mockito.version>
-    <retrofit.version>2.4.0</retrofit.version>
+    <retrofit.version>2.5.0</retrofit.version>
   </properties>
 
   <build>
