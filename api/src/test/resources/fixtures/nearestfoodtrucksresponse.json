@@ -1,0 +1,17 @@
+{
+  "numResults": 10,
+  "startFrom": 0,
+  "limit": 5,
+  "inputLatitude": 0.123,
+  "inputLongitude": 0.456,
+  "results": [
+    {
+      "name": "Pat's Panini Partywagon",
+      "type": "TRUCK",
+      "locationDescription": "North of Seventh and South of Ninth",
+      "address": "888 Eighth",
+      "foodItems": "Paninis pressed to perfection",
+      "distanceInMiles": 1.789
+    }
+  ]
+}

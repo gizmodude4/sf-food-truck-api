@@ -70,15 +70,10 @@ public class FoodTruckService {
    * @param types List<{@link TruckType}> list of types to return. Empty list means no filter applied
    * @param inLat double latitude to center search on
    * @param inLon double longitude to center search on
-   * @param limit long limit for how many trucks should be returned. Must be > 0.
    * @return List<{@link FoodTruck}> List of the closest trucks to supplied lat/lon in ascending order of distance
    * @throws IOException when something goes wrong either talking to the dataSF API or caching the results.
    */
-  public List<FoodTruck> getFoodTrucks(List<TruckType> types, double inLat,
-                                       double inLon, long limit) throws IOException {
-    if (limit < 1) {
-      throw new IllegalArgumentException("Limit must be > 0");
-    }
+  public List<FoodTruck> getFoodTrucks(List<TruckType> types, double inLat, double inLon) throws IOException {
     validateLatLon(inLat, inLon);
     try {
       return foodTruckCache.get("trucks").stream()
@@ -87,7 +82,6 @@ public class FoodTruckService {
           .map(truck -> toFoodTruck(truck, inLat, inLon))                      // Convert to API object
           .filter(truck -> types.isEmpty() || types.contains(truck.getType())) // Filter to only requested types
           .sorted(Comparator.comparing(FoodTruck::getDistanceInMiles))         // Sort by distance
-          .limit(limit)                                                        // limit
           .collect(Collectors.toList());
     } catch (ExecutionException e) {
       // Most of the time, if this happens, it's because we couldn't contact the API. Throw an IOException.

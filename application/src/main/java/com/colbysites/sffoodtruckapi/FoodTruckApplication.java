@@ -1,6 +1,7 @@
 package com.colbysites.sffoodtruckapi;
 
 import com.colbysites.sffoodtruckapi.datasfapi.DataSFApiModule;
+import com.colbysites.sffoodtruckapi.healthchecks.DataSFHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;
@@ -26,7 +27,10 @@ public class FoodTruckApplication extends Application<FoodTruckConfiguration> {
             .dataSFApiModule(new DataSFApiModule(configuration.getDataSFHost(), environment.getObjectMapper()))
             .build();
 
+    environment.healthChecks().register("dataSFApi", new DataSFHealthCheck(configuration.getDataSFHost()));
+
     environment.jersey().register(component.getFoodTruckResource());
+    environment.jersey().register(component.getPingResource());
   }
 
   private void initConfigResourceProvider(Bootstrap<FoodTruckConfiguration> bootstrap) {

@@ -34,7 +34,6 @@ public class FoodTruckServiceTest {
   private static final double LON = -122.409668813219;
   private static final double INVALID_LAT = 100.0;
   private static final double INVALID_LON = 200.0;
-  private static final long LIMIT = 5;
 
   private final DataSFApiClient dataClient = mock(DataSFApiClient.class);
   private final Call<String> dataClientCall = mock(Call.class);
@@ -65,7 +64,7 @@ public class FoodTruckServiceTest {
     String csvString = FixtureHelpers.fixture("fixtures/foodtrucks.csv");
     when(dataClientCall.execute()).thenReturn(Response.success(csvString));
     when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON, LIMIT);
+    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON);
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(5, trucks.size());
@@ -76,7 +75,7 @@ public class FoodTruckServiceTest {
     String csvString = FixtureHelpers.fixture("fixtures/foodtrucks.csv");
     when(dataClientCall.execute()).thenReturn(Response.success(csvString));
     when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.TRUCK), LAT, LON, LIMIT);
+    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.TRUCK), LAT, LON);
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(3, trucks.size());
@@ -87,7 +86,7 @@ public class FoodTruckServiceTest {
     String csvString = FixtureHelpers.fixture("fixtures/foodtrucks.csv");
     when(dataClientCall.execute()).thenReturn(Response.success(csvString));
     when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.PUSH_CART), LAT, LON, LIMIT);
+    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.PUSH_CART), LAT, LON);
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(1, trucks.size());
@@ -98,18 +97,7 @@ public class FoodTruckServiceTest {
     String csvString = FixtureHelpers.fixture("fixtures/foodtrucks.csv");
     when(dataClientCall.execute()).thenReturn(Response.success(csvString));
     when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.UNKNOWN_TYPE), LAT, LON, LIMIT);
-    verify(dataClient).getFoodTrucks();
-    verify(converter).convertCsvStringToFoodTrucks(csvString);
-    assertEquals(1, trucks.size());
-  }
-
-  @Test
-  public void getFoodTrucksLimit() throws IOException {
-    String csvString = FixtureHelpers.fixture("fixtures/foodtrucks.csv");
-    when(dataClientCall.execute()).thenReturn(Response.success(csvString));
-    when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON, 1);
+    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(TruckType.UNKNOWN_TYPE), LAT, LON);
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(1, trucks.size());
@@ -122,33 +110,28 @@ public class FoodTruckServiceTest {
     String csvString = FixtureHelpers.fixture("fixtures/onefoodtruck.csv");
     when(dataClientCall.execute()).thenReturn(Response.success(csvString));
     when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON, 1);
+    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON);
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(1, trucks.size());
     assertTrue(!trucks.get(0).getDistanceInMiles().isNaN());
-    assertTrue(trucks.get(0).getDistanceInMiles().equals(0.0));
+    assertEquals(0.0, trucks.get(0).getDistanceInMiles(), 0);
   }
 
   @Test(expected = IOException.class)
   public void getFoodTrucksThrowsIfAPIDown() throws IOException {
     when(dataClientCall.execute()).thenThrow(new IOException("Oh man, that API is goooone"));
-    unit.getFoodTrucks(Lists.newArrayList(), LAT, LON, 1);
+    unit.getFoodTrucks(Lists.newArrayList(), LAT, LON);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void getFoodTrucksThrowsForInvalidLat() throws IOException {
-    unit.getFoodTrucks(Lists.newArrayList(), INVALID_LAT, LON, 1);
+    unit.getFoodTrucks(Lists.newArrayList(), INVALID_LAT, LON);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void getFoodTrucksThrowsForInvalidLon() throws IOException {
-    unit.getFoodTrucks(Lists.newArrayList(), LAT, INVALID_LON, 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void getFoodTrucksThrowsForInvalidLimit() throws IOException {
-    unit.getFoodTrucks(Lists.newArrayList(), LAT, LON, 0);
+    unit.getFoodTrucks(Lists.newArrayList(), LAT, INVALID_LON);
   }
 
   private List<DataSFFoodTruck> convertCsvStringToFoodTrucks(String csv) {

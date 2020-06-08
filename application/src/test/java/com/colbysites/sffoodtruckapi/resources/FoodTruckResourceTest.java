@@ -1,11 +1,11 @@
 package com.colbysites.sffoodtruckapi.resources;
 
 import com.colbysites.sffoodtruckapi.FoodTruck;
+import com.colbysites.sffoodtruckapi.NearestFoodTrucksResponse;
 import com.colbysites.sffoodtruckapi.TruckType;
 import com.colbysites.sffoodtruckapi.service.FoodTruckService;
 import com.google.common.collect.Lists;
 import java.io.IOException;
-import java.util.List;
 import javax.ws.rs.BadRequestException;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +13,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +20,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class FoodTruckResourceTest {
   private static final long DEFAULT_LIMIT = 5L;
+  private static final long DEFAULT_START = 0L;
   private static final String TRUCK_NAME = "Jonald Hamboni's Calzoney Zambonie";
   private static final TruckType TRUCK_TYPE = TruckType.TRUCK;
   private static final String LOCATION_DESCRIPTION = "Near the good mall";
@@ -44,37 +44,47 @@ public class FoodTruckResourceTest {
   @Test
   public void testGet() throws IOException {
     FoodTruck truck = buildMockFoodTruck();
-    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble(), anyLong()))
-        .thenReturn(Lists.newArrayList(truck));
-    List<FoodTruck> actual = unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), 1L);
-    assertEquals(1, actual.size());
-    assertTruckEquals(truck, actual.get(0));
+    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble())).thenReturn(Lists.newArrayList(truck));
+    NearestFoodTrucksResponse actual = unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), 0L, 5L);
+    assertEquals(1, actual.getNumResults());
+    assertTruckEquals(truck, actual.getResults().get(0));
   }
 
   @Test
   public void testGetNoLimitDefaults() throws IOException {
     FoodTruck truck = buildMockFoodTruck();
-    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble(), anyLong()))
+    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble()))
         .thenReturn(Lists.newArrayList(truck, truck, truck, truck, truck, truck, truck));
-    unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), null);
-    verify(foodTruckService).getFoodTrucks(Lists.newArrayList(TRUCK_TYPE), LAT, LON, DEFAULT_LIMIT);
+    NearestFoodTrucksResponse actual = unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), null, null);
+    verify(foodTruckService).getFoodTrucks(Lists.newArrayList(TRUCK_TYPE), LAT, LON);
+    assertEquals(DEFAULT_LIMIT, actual.getLimit());
+    assertEquals(DEFAULT_START, actual.getStartFrom());
   }
 
   @Test(expected = BadRequestException.class)
   public void testGetThrowsOnIllegalArgument() throws IOException {
-    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble(), anyLong()))
+    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble()))
         .thenThrow(new IllegalArgumentException("You did a bad thing!"));
-    unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), null);
+    unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), null, null);
   }
 
   @Test(expected = BadRequestException.class)
   public void testGetThrowsOnUnspecifiedLat() {
-    unit.getFoodTruckIds(null, LON, Lists.newArrayList(TRUCK_TYPE), null);
+    unit.getFoodTruckIds(null, LON, Lists.newArrayList(TRUCK_TYPE), null, null);
   }
 
   @Test(expected = BadRequestException.class)
   public void testGetThrowsOnUnspecifiedLon() {
-    unit.getFoodTruckIds(LAT, null, Lists.newArrayList(TRUCK_TYPE), null);
+    unit.getFoodTruckIds(LAT, null, Lists.newArrayList(TRUCK_TYPE), null, null);
+  }
+
+  @Test(expected = BadRequestException.class)
+  public void testGetThrowsOnTooFewResults() throws IOException {
+    FoodTruck truck = buildMockFoodTruck();
+    when(foodTruckService.getFoodTrucks(anyList(), anyDouble(), anyDouble())).thenReturn(Lists.newArrayList(truck));
+    NearestFoodTrucksResponse actual = unit.getFoodTruckIds(LAT, LON, Lists.newArrayList(TRUCK_TYPE), 1L, 5L);
+    assertEquals(1, actual.getNumResults());
+    assertTruckEquals(truck, actual.getResults().get(0));
   }
 
   private FoodTruck buildMockFoodTruck() {
