@@ -1,5 +1,7 @@
 package com.colbysites.sffoodtruckapi.resources;
 
+import com.codahale.metrics.annotation.ResponseMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.colbysites.sffoodtruckapi.FoodTruck;
 import com.colbysites.sffoodtruckapi.NearestFoodTrucksResponse;
 import com.colbysites.sffoodtruckapi.TruckType;
@@ -38,7 +40,6 @@ public class FoodTruckResource {
     this.foodTruckService = foodTruckService;
   }
 
-
   /**
    * Given a latitude, longitude, optional limit, and optional filter, return a list of the
    * closest San Francisco food trucks to the input coordinate.
@@ -57,6 +58,8 @@ public class FoodTruckResource {
                   message = "Either lat, lon, or limit are invalid"),
           @ApiResponse(code = 503, message = "Cannot contact dataSF api")
   })
+  @Timed
+  @ResponseMetered
   @GET
   public NearestFoodTrucksResponse getFoodTruckIds(@ApiParam(name = "lat", value = "Your longitude", type = "double")
                                            @QueryParam("lat") Double lat,

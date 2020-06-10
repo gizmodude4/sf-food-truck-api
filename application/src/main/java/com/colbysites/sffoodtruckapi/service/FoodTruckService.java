@@ -21,10 +21,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class FoodTruckService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(FoodTruckService.class);
   private static final String APPROVAL_STRING = "APPROVED";
   private final DataSFApiClient client;
   private final CsvStringConverter converter;
@@ -84,6 +87,7 @@ public class FoodTruckService {
           .sorted(Comparator.comparing(FoodTruck::getDistanceInMiles))         // Sort by distance
           .collect(Collectors.toList());
     } catch (ExecutionException e) {
+      LOGGER.error("Could not get food trucks to cache", e);
       // Most of the time, if this happens, it's because we couldn't contact the API. Throw an IOException.
       throw new IOException(e);
     }
