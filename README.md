@@ -1,8 +1,9 @@
 # SF Food Truck API
 
-An API that returns the closest San Francisco food trucks to you based off the data provided by DataSF
+An API that returns the closest San Francisco food trucks to you based off the data provided by DataSF.
 
 ## Getting Started
+This application targets Java 11, so make sure that's installed.
 
     git clone git@github.com:gizmodude4/sf-food-truck-api.git
     cd sf-food-truck-api

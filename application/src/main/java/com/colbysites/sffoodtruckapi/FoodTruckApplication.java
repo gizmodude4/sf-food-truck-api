@@ -22,9 +22,9 @@ public class FoodTruckApplication extends Application<FoodTruckConfiguration> {
   }
 
   @Override
-  public void run(FoodTruckConfiguration configuration, Environment environment) throws Exception {
+  public void run(FoodTruckConfiguration configuration, Environment environment) {
     FoodTruckComponent component = DaggerFoodTruckComponent.builder()
-            .dataSFApiModule(new DataSFApiModule(configuration.getDataSFHost(), environment.getObjectMapper()))
+            .dataSFApiModule(new DataSFApiModule(configuration.getDataSFHost()))
             .build();
 
     environment.healthChecks().register("dataSFApi", new DataSFHealthCheck(configuration.getDataSFHost()));

@@ -20,7 +20,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -101,21 +100,6 @@ public class FoodTruckServiceTest {
     verify(dataClient).getFoodTrucks();
     verify(converter).convertCsvStringToFoodTrucks(csvString);
     assertEquals(1, trucks.size());
-  }
-
-  // The data in onefoodtruck.csv contains one food truck whose GPS coordinates match the
-  // ones used in this unit test.
-  @Test
-  public void getFoodTrucksVerifyDistances() throws IOException {
-    String csvString = FixtureHelpers.fixture("fixtures/onefoodtruck.csv");
-    when(dataClientCall.execute()).thenReturn(Response.success(csvString));
-    when(converter.convertCsvStringToFoodTrucks(csvString)).thenReturn(convertCsvStringToFoodTrucks(csvString));
-    List<FoodTruck> trucks = unit.getFoodTrucks(Lists.newArrayList(), LAT, LON);
-    verify(dataClient).getFoodTrucks();
-    verify(converter).convertCsvStringToFoodTrucks(csvString);
-    assertEquals(1, trucks.size());
-    assertTrue(!trucks.get(0).getDistanceInMiles().isNaN());
-    assertEquals(0.0, trucks.get(0).getDistanceInMiles(), 0);
   }
 
   @Test(expected = IOException.class)

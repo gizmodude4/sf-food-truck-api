@@ -33,6 +33,7 @@ import static java.util.Objects.isNull;
 @Consumes(MediaType.APPLICATION_JSON)
 public class FoodTruckResource {
   private static final long DEFAULT_LIMIT = 5;
+  private static final long DEFAULT_START_FROM = 0;
   private final FoodTruckService foodTruckService;
 
   @Inject
@@ -79,7 +80,7 @@ public class FoodTruckResource {
     }
 
     if (isNull(startFrom)) {
-      startFrom = 0L;
+      startFrom = DEFAULT_START_FROM;
     }
 
     if (isNull(lat) || isNull(lon)) {

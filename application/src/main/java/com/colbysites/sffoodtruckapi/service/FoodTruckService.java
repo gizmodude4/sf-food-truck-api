@@ -5,16 +5,11 @@ import com.colbysites.sffoodtruckapi.TruckType;
 import com.colbysites.sffoodtruckapi.datasfapi.CsvStringConverter;
 import com.colbysites.sffoodtruckapi.datasfapi.DataSFApiClient;
 import com.colbysites.sffoodtruckapi.datasfapi.DataSFFoodTruck;
+import com.colbysites.sffoodtruckapi.utils.DateUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -26,16 +21,19 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import static com.colbysites.sffoodtruckapi.utils.LatLonUtils.getDistance;
+import static com.colbysites.sffoodtruckapi.utils.LatLonUtils.validateLatLon;
+
 public class FoodTruckService {
   private static final Logger LOGGER = LoggerFactory.getLogger(FoodTruckService.class);
   private static final String APPROVAL_STRING = "APPROVED";
   private final DataSFApiClient client;
   private final CsvStringConverter converter;
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a");
+
   private final LoadingCache<String, List<DataSFFoodTruck>> foodTruckCache;
 
   /**
-   * FoodTruckService is the service layer that abstracts away and caches results from the dataSF API
+   * FoodTruckService is the service layer that abstracts away and caches food truck data from the dataSF API
    * as well as provides a method to get nearest food trucks from that API.
    * @param client {@link DataSFApiClient} Retrofit client to talk with the dataSF API
    * @param converter {@link CsvStringConverter} Converter for CSV string to POJO
@@ -68,7 +66,7 @@ public class FoodTruckService {
 
   /**
    * Method to return list of closest food trucks to a given lat and long with a filter and limit applied. Only
-   * trucks that have an approved permit (status == "APPROVED), expiration date is in the future, and optionally
+   * trucks that have an approved permit (status == "APPROVED"), expiration date is in the future, and optionally
    * of the specified type.
    * @param types List<{@link TruckType}> list of types to return. Empty list means no filter applied
    * @param inLat double latitude to center search on
@@ -81,7 +79,7 @@ public class FoodTruckService {
     try {
       return foodTruckCache.get("trucks").stream()
           .filter(truck -> APPROVAL_STRING.equals(truck.getStatus()))          // Only return approved trucks
-          .filter(this::isNotExpired)                                          // Make sure application not expired
+          .filter(DateUtils::isNotExpired)                                     // Make sure application not expired
           .map(truck -> toFoodTruck(truck, inLat, inLon))                      // Convert to API object
           .filter(truck -> types.isEmpty() || types.contains(truck.getType())) // Filter to only requested types
           .sorted(Comparator.comparing(FoodTruck::getDistanceInMiles))         // Sort by distance
@@ -91,6 +89,16 @@ public class FoodTruckService {
       // Most of the time, if this happens, it's because we couldn't contact the API. Throw an IOException.
       throw new IOException(e);
     }
+  }
+
+  private List<DataSFFoodTruck> getFoodTrucksFromApi() throws IOException {
+    Call<String> retrofitCall = client.getFoodTrucks();
+    Response<String> response = retrofitCall.execute();
+    if (!response.isSuccessful()) {
+      throw new IOException("Call to " + retrofitCall.request().url() + "failed with code "
+          + response.code() + ". Message: " + response.message());
+    }
+    return converter.convertCsvStringToFoodTrucks(response.body());
   }
 
   private FoodTruck toFoodTruck(DataSFFoodTruck truck, double inLat, double inLon) {
@@ -108,48 +116,5 @@ public class FoodTruckService {
       default:
         return TruckType.UNKNOWN_TYPE;
     }
-  }
-
-  private List<DataSFFoodTruck> getFoodTrucksFromApi() throws IOException {
-    Call<String> retrofitCall = client.getFoodTrucks();
-    Response<String> response = retrofitCall.execute();
-    if (!response.isSuccessful()) {
-      throw new IOException("Call to " + retrofitCall.request().url() + "failed with code "
-          + response.code() + ". Message: " + response.message());
-    }
-    return converter.convertCsvStringToFoodTrucks(response.body());
-  }
-
-  private void validateLatLon(double lat, double lon) {
-    if (lat < -90 || lat > 90) {
-      throw new IllegalArgumentException("Lat must be between -90 and 90.");
-    }
-    if (lon < -180 || lon > 180) {
-      throw new IllegalArgumentException("Lon must be between -180 and 180.");
-    }
-  }
-
-  private boolean isNotExpired(DataSFFoodTruck truck) {
-    // Since the data source doesn't have to worry about timezones, they don't include them,
-    // so we'll add in the time zone here so this should work no matter where it runs.
-    TemporalAccessor accessor = formatter.parse(truck.getExpiration());
-    LocalDateTime local = LocalDateTime.from(accessor);
-    ZonedDateTime zoned = ZonedDateTime.of(local, ZoneId.of("America/Los_Angeles"));
-    return Instant.now().isBefore(Instant.from(zoned));
-  }
-
-  // This function implements the Haversine formula to calculate the distance between two points on a sphere
-  // given their lats and lons. Returns distance in miles as the crow flies.
-  // Find out more about this neat algo here -- https://en.wikipedia.org/wiki/Haversine_formula
-  private Double getDistance(DataSFFoodTruck truck, double inLat, double inLon) {
-    final double earthRadiusInMiles = 3958.8;
-    double truckLat = Double.valueOf(truck.getLat());
-    double truckLon = Double.valueOf(truck.getLon());
-    double latDifference = Math.toRadians(inLat - truckLat);
-    double lonDistance = Math.toRadians(inLon - truckLon);
-    double havLat = Math.pow(Math.sin(latDifference / 2), 2);
-    double havLon = Math.pow(Math.sin(lonDistance / 2), 2);
-    double a = havLat + Math.cos(Math.toRadians(truckLat)) * Math.cos(Math.toRadians(inLat)) * havLon;
-    return 2 * earthRadiusInMiles * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 }

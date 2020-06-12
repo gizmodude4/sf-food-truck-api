@@ -1,6 +1,5 @@
 package com.colbysites.sffoodtruckapi.datasfapi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dagger.Module;
 import dagger.Provides;
 import javax.inject.Singleton;
@@ -10,11 +9,9 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 @Module
 public class DataSFApiModule {
   private String host;
-  private ObjectMapper mapper;
 
-  public DataSFApiModule(String host, ObjectMapper mapper) {
+  public DataSFApiModule(String host) {
     this.host = host;
-    this.mapper = mapper;
   }
 
   @Provides
