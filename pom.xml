@@ -25,7 +25,7 @@
     <jackson.api.version>2.10.2</jackson.api.version>
     <jackson-converter.version>2.4.0</jackson-converter.version>
     <jackson-dataformat-csv.version>2.8.8</jackson-dataformat-csv.version>
-    <jackson.version>2.10.2</jackson.version>
+    <jackson.version>2.12.7.1</jackson.version>
     <junit.version>4.12</junit.version>
     <mockito.version>3.0.0</mockito.version>
     <retrofit.version>2.5.0</retrofit.version>
